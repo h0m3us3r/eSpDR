@@ -1,0 +1,62 @@
+# Alchitry Au (XC7A35T-FTG256) + Ft (FT600) + Br pin assignments.
+# DDR3 pins are assigned by the MIG core (ip/mig.prj).
+
+set_property CFGBVS VCCO [current_design]
+set_property CONFIG_VOLTAGE 3.3 [current_design]
+set_property BITSTREAM.CONFIG.UNUSEDPIN PULLNONE [current_design]
+set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
+
+# Board
+set_property -dict {PACKAGE_PIN N14 IOSTANDARD LVCMOS33} [get_ports clk100]
+set_property -dict {PACKAGE_PIN P6  IOSTANDARD LVCMOS33} [get_ports rst_n]
+set_property -dict {PACKAGE_PIN P15 IOSTANDARD LVCMOS33} [get_ports uart_rx]
+set_property -dict {PACKAGE_PIN P16 IOSTANDARD LVCMOS33 DRIVE 4 SLEW SLOW} [get_ports uart_tx]
+
+# ESP32-S3 link, lane 0 = link[7:0], lane 1 = link[15:8] (Br header)
+set_property PACKAGE_PIN T15 [get_ports {link[0]}]
+set_property PACKAGE_PIN T14 [get_ports {link[1]}]
+set_property PACKAGE_PIN P14 [get_ports {link[2]}]
+set_property PACKAGE_PIN R16 [get_ports {link[3]}]
+set_property PACKAGE_PIN M15 [get_ports {link[4]}]
+set_property PACKAGE_PIN R15 [get_ports {link[5]}]
+set_property PACKAGE_PIN L5  [get_ports {link[6]}]
+set_property PACKAGE_PIN N4  [get_ports {link[7]}]
+set_property PACKAGE_PIN P5  [get_ports {link[8]}]
+set_property PACKAGE_PIN M5  [get_ports {link[9]}]
+set_property PACKAGE_PIN L4  [get_ports {link[10]}]
+set_property PACKAGE_PIN P4  [get_ports {link[11]}]
+set_property PACKAGE_PIN N3  [get_ports {link[12]}]
+set_property PACKAGE_PIN R10 [get_ports {link[13]}]
+set_property PACKAGE_PIN R12 [get_ports {link[14]}]
+set_property PACKAGE_PIN R13 [get_ports {link[15]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {link[*]}]
+
+# 40 MHz reference to the ESP32-S3 crystal input (Br B2)
+set_property -dict {PACKAGE_PIN D1 IOSTANDARD LVCMOS33 DRIVE 8 SLEW SLOW} [get_ports esp_refin]
+
+# FT600 (Ft), 245 FIFO mode
+set_property PACKAGE_PIN F5 [get_ports ft_clk]
+set_property PACKAGE_PIN M6 [get_ports ft_txe]
+set_property PACKAGE_PIN H5 [get_ports ft_wr]
+set_property PACKAGE_PIN H4 [get_ports ft_rd]
+set_property PACKAGE_PIN E5 [get_ports ft_oe]
+set_property PACKAGE_PIN H2 [get_ports {ft_be[0]}]
+set_property PACKAGE_PIN H1 [get_ports {ft_be[1]}]
+set_property PACKAGE_PIN B7 [get_ports {ft_data[0]}]
+set_property PACKAGE_PIN A7 [get_ports {ft_data[1]}]
+set_property PACKAGE_PIN B6 [get_ports {ft_data[2]}]
+set_property PACKAGE_PIN B5 [get_ports {ft_data[3]}]
+set_property PACKAGE_PIN A5 [get_ports {ft_data[4]}]
+set_property PACKAGE_PIN A4 [get_ports {ft_data[5]}]
+set_property PACKAGE_PIN B4 [get_ports {ft_data[6]}]
+set_property PACKAGE_PIN A3 [get_ports {ft_data[7]}]
+set_property PACKAGE_PIN C7 [get_ports {ft_data[8]}]
+set_property PACKAGE_PIN C6 [get_ports {ft_data[9]}]
+set_property PACKAGE_PIN D6 [get_ports {ft_data[10]}]
+set_property PACKAGE_PIN D5 [get_ports {ft_data[11]}]
+set_property PACKAGE_PIN G5 [get_ports {ft_data[12]}]
+set_property PACKAGE_PIN G4 [get_ports {ft_data[13]}]
+set_property PACKAGE_PIN G2 [get_ports {ft_data[14]}]
+set_property PACKAGE_PIN G1 [get_ports {ft_data[15]}]
+set_property IOSTANDARD LVCMOS33 [get_ports {ft_clk ft_txe ft_wr ft_rd ft_oe ft_be[*] ft_data[*]}]
+set_property -dict {DRIVE 8 SLEW FAST} [get_ports {ft_wr ft_rd ft_oe ft_be[*] ft_data[*]}]

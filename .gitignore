@@ -1,0 +1,33 @@
+# Local recordings, demos, posts and measurement evidence.
+/local/
+/artifacts/
+
+# Build outputs at any depth; Vivado also writes state in the working directory.
+build/
+.Xil/
+*.jou
+*.log
+*.str
+
+# Host captures.
+*.iqc
+*.cs16
+*.cf32
+
+# Local environments and credentials.
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# Tool caches and editor/OS scratch files.
+__pycache__/
+*.py[cod]
+node_modules/
+.cache/
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
