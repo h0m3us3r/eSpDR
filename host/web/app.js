@@ -907,7 +907,7 @@ function tune(hz, centre = false) {
         toast('The receiver is not available.', 'bad');
         return;
     }
-    hz = clamp(Math.round(hz), 2210e6, 2790e6);
+    hz = clamp(Math.round(hz), status.receiver.lo_min, status.receiver.lo_max);
     pendingLo = hz;
     pendingLoAt = performance.now();
     const f = fullSpan();
@@ -1034,7 +1034,7 @@ function bindSlider(id, onValue) {
 function showReceiver(r) {
     if (!r) return;
     const [cap, first, length] = r.pll;
-    $('lo-note').textContent = `Exactly ${r.lo.toLocaleString('en-US')} Hz · PLL capacitor ${cap} (locks ${first}–${first + length - 1})`;
+    $('lo-note').textContent = `Nominal ${r.lo.toLocaleString('en-US')} Hz · ${r.lo_mode === 2 ? '5/6' : 'Normal'} conversion · PLL capacitor ${cap} (locks ${first}–${first + length - 1})`;
     showSegmented('rate', r.rate);
     showSegmented('width', r.width);
     showValue($('filter'), r.filter[0]);

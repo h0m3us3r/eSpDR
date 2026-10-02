@@ -13,6 +13,7 @@
  * restores after every run.
  */
 #include "radio.h"
+#include "lo_plan.h"
 
 #include <stdbool.h>
 #include <string.h>
@@ -27,7 +28,6 @@
 #include "soc/syscon_reg.h"
 #include "soc/system_reg.h"
 
-#define REFERENCE_HZ 40000000u
 #define PBUS_TIMEOUT_CYCLES 24000u
 #define IQ_FIELDS 0x1FFF0000u  /* I/Q correction: amplitude 20:16, phase 26:21, mode 28:27 */
 #define IQ_MANUAL 0x08000000u  /* bit 27 set, bit 28 clear: the fields apply */
@@ -54,7 +54,9 @@ static struct {
 /* The receiver as configured. */
 static struct {
     unsigned status;                /* ESP_RADIO_* */
-    uint32_t lo_hz;                 /* exact LO */
+    uint32_t lo_hz, pll_hz;         /* nominal effective LO / normal PLL coordinate */
+    uint32_t sdm_word;
+    enum esp32s3_lo_mode lo_mode;
     unsigned pll_cap, pll_first, pll_length;
     bool owned;                     /* gain stages held through the PBUS */
     uint32_t pbus_ctrl, pbus_mode;  /* before taking them */
@@ -143,10 +145,18 @@ static void set_pll_manual_capacitor(bool manual)
  */
 static bool tune_pll(uint32_t lo_hz)
 {
-    /* LO = 3/4 * reference * (32 + word / 2^16), to the nearest word */
-    uint64_t scaled = ((uint64_t)lo_hz * 4 * 65536 + 3ull * REFERENCE_HZ / 2) / (3ull * REFERENCE_HZ);
-    uint32_t word = (uint32_t)(scaled - 32 * 65536);
-    receiver.lo_hz = (uint32_t)((3ull * REFERENCE_HZ * scaled + 2 * 65536) / (4 * 65536));
+    struct esp32s3_lo_plan plan;
+    if (!esp32s3_plan_lo(lo_hz, ESP32S3_LO_AUTO, &plan))
+        return false;
+    uint32_t word = plan.sdm_word;
+    receiver.lo_hz = plan.lo_hz;
+    receiver.pll_hz = plan.pll_hz;
+    receiver.sdm_word = word;
+    receiver.lo_mode = plan.mode;
+
+    /* Calibrate in normal conversion, as in the external-tone tests.
+     * The final receive mode is applied after configure_receiver(). */
+    analog_write_bits(ESP32S3_CKGEN_BLOCK, ESP32S3_CKGEN_REG, ESP32S3_CKGEN_5_6_BIT, 0);
 
     REG(RFPLL_OWNER_REG) |= 1u << 25;
     set_pll_manual_capacitor(false);
@@ -336,6 +346,14 @@ static unsigned reconfigure(bool retune)
         return ESP_RADIO_PLL_FAILED;
     if (!configure_receiver())
         return ESP_RADIO_PBUS_FAILED;
+    /* Preserve every other CKGEN bit. On the tested PHY baseline this is
+     * 0x63 -> 0x73 for 5/6, or back to 0x63 for normal conversion.
+     * Reapply after every setting change, including failed-tune recovery. */
+    uint8_t mode = receiver.lo_mode == ESP32S3_LO_5_6 ? ESP32S3_CKGEN_5_6_BIT : 0;
+    analog_write_bits(ESP32S3_CKGEN_BLOCK, ESP32S3_CKGEN_REG, ESP32S3_CKGEN_5_6_BIT, mode);
+    delay_us(3000);
+    if ((analog_read(ESP32S3_CKGEN_BLOCK, ESP32S3_CKGEN_REG) & ESP32S3_CKGEN_5_6_BIT) != mode)
+        return ESP_RADIO_PLL_FAILED;
     return ESP_RADIO_OK;
 }
 
@@ -432,6 +450,9 @@ uint32_t radio_stat(unsigned index)
         return automatic;
     }
     case ESP_STAT_PLL: return receiver.pll_cap | (receiver.pll_first << 9) | (receiver.pll_length << 18);
+    case ESP_STAT_LO_MODE: return receiver.lo_mode;
+    case ESP_STAT_PLL_HZ: return receiver.pll_hz;
+    case ESP_STAT_SDM_WORD: return receiver.sdm_word;
     default: return 0;
     }
 }

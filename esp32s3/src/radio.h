@@ -22,7 +22,7 @@ unsigned radio_init(void);
  */
 unsigned radio_set(unsigned op, uint32_t value, uint32_t *effective);
 
-/* Settings in effect, indexed by ESP_STAT_LO_HZ..ESP_STAT_PLL; 0 otherwise. */
+/* Settings in effect, indexed by ESP_STAT_LO_HZ..ESP_STAT_SDM_WORD; 0 otherwise. */
 uint32_t radio_stat(unsigned index);
 
 /* The dump engine's control word for the selected sample rate (not running),

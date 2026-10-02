@@ -10,6 +10,14 @@ trap 'rm -rf "$work"' EXIT
 
 step() { printf '\n== %s\n' "$*"; }
 
+step "LO planning and receiver settings"
+cc -std=c11 -O2 -Wall -Wextra -Werror -Iprotocol -Iesp32s3/src tests/lo_plan_test.c -lm -o "$work/lo_plan_test"
+"$work/lo_plan_test"
+c++ -std=c++17 -O2 -Wall -Wextra -Werror -pthread -Iprotocol -Ihost/src tests/receiver_test.cpp \
+    host/src/receiver.cpp host/src/serial.cpp protocol/iq_record.cpp -o "$work/receiver_test"
+"$work/receiver_test"
+python3 tests/radio_tuning_test.py
+
 step "reference codec"
 c++ -std=c++17 -O2 -Wall -Wextra -Werror -Iprotocol protocol/iq_record.cpp tests/codec_test.cpp -o "$work/codec_test"
 c++ -std=c++17 -O1 -g -fsanitize=address,undefined -Iprotocol protocol/iq_record.cpp tests/codec_test.cpp -o "$work/codec_test_asan"

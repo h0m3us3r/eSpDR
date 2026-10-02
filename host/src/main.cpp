@@ -20,7 +20,8 @@ commands:
   decode INPUT.iqc OUTPUT.cs16        convert a captured .iqc file ("-" for stdin/stdout)
   status                              identities, readiness, receiver settings, last-run statistics
   set NAME=VALUE...                   change receiver settings (kept until the ESP is reloaded):
-                                        lo=2402M rate=80|16 width=40|20 filter=N[,M] gain=N
+                                        lo=1900M (1841.666667..2790 MHz) rate=80|16 width=40|20
+                                        filter=N[,M] gain=N
                                         rf=N|auto bb=N|auto dc0..dc3=N|auto iq=A,P|auto
   serve [--listen ADDR:PORT]          stream a live spectrum and waterfall to web browsers, with
                                       receiver control and live statistics (default 127.0.0.1:8073)

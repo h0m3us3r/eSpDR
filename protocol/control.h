@@ -36,7 +36,7 @@
 #define CTL_FAILED 6      /* attempted and failed; see the operation */
 
 /* Identity values returned by CTL_INFO with argument 0. */
-#define CTL_ESP_FIRMWARE_ID 0x49515305
+#define CTL_ESP_FIRMWARE_ID 0x49515306
 #define CTL_FPGA_FIRMWARE_ID 0x49514605
 
 /* Operations understood by both nodes. */
@@ -58,7 +58,7 @@
  * automatic gain stage, for example). A setting that is refused (bad
  * argument) or fails (CTL_FAILED) leaves the previous configuration.
  */
-#define ESP_SET_LO 20       /* LO frequency, Hz (with ESP_ARG_HIGH); reply: exact LO */
+#define ESP_SET_LO 20       /* effective receive LO, Hz; automatic normal/5/6 selection */
 #define ESP_SET_RATE 21     /* ESP_RATE_* */
 #define ESP_SET_WIDTH 22    /* analog channel width, MHz: 20 or 40 */
 #define ESP_SET_FILTER 23   /* baseband RC filter codes: first | second << 8, each 0..63 */
@@ -72,8 +72,8 @@
 #define ESP_DC_AUTO 0xFFF
 #define ESP_RATE_80M 0      /* 80 Msps */
 #define ESP_RATE_16M 1      /* 16 Msps */
-#define ESP_LO_MIN_HZ 2210000000 /* the RF PLL locks from about 2207 to 2795 MHz; */
-#define ESP_LO_MAX_HZ 2790000000 /* reception was verified from 2356 to 2476 MHz */
+#define ESP_LO_MIN_HZ 1841666667 /* ceil(2210 MHz * 5/6); per-board PLL lock still required */
+#define ESP_LO_MAX_HZ 2790000000
 
 /*
  * DC offset registers (ESP_SET_DC): 0 and 1 shift I, 2 and 3 shift Q, by
@@ -122,7 +122,10 @@
 #define ESP_STAT_IQ 26            /* I/Q correction fields in the register */
 #define ESP_STAT_AUTOMATIC 27     /* automatic settings: RF 1, BB 2, DC 4 << register, IQ 64 */
 #define ESP_STAT_PLL 28           /* capacitor code | lock window first << 9 | length << 18 */
-#define ESP_STAT_COUNT 29
+#define ESP_STAT_LO_MODE 29       /* 1: normal, 2: 5/6; actual selected conversion */
+#define ESP_STAT_PLL_HZ 30        /* nominal normal-mode PLL coordinate, Hz */
+#define ESP_STAT_SDM_WORD 31      /* programmed 24-bit sigma-delta word */
+#define ESP_STAT_COUNT 32
 
 #define ESP_RADIO_OK 0
 #define ESP_RADIO_PHY_FAILED 1

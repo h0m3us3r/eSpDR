@@ -150,18 +150,24 @@ setting that works at that frequency. The word sets the PLL's frequency
 relationship to the reference. The capacitor setting puts the VCO into the
 right operating range.
 
+The [5/6 LO extension](LO-EXTENSION.md) adds automatic lower-band tuning,
+with a standalone implementation and a guide to adapting the method to
+other ESP variants.
+
 ### The frequency word
 
 For the ESP's nominal 40 MHz crystal reference, the relation implemented by the
 firmware is:
 
 ```text
-LO = (3/4 × reference) × (32 + W / 65536)
-   = 960 MHz + 30 MHz × W / 65536
+normal LO = (3/4 × reference) × (32 + W / 65536)
+          = 960 MHz + 30 MHz × W / 65536
+5/6 LO    = 800 MHz + 25 MHz × W / 65536
 ```
 
 `W` is a 24-bit sigma-delta word. One increment corresponds to
-**457.763671875 Hz** at the nominal reference frequency. The firmware rounds
+**457.763671875 Hz** in normal mode or **381.4697265625 Hz** in 5/6 mode
+at the nominal reference frequency. The firmware rounds
 the requested LO to the nearest word and reports the resulting frequency
 in integer Hz. For example, requesting 2440 MHz gives `W = 0x315555` and a
 reported LO of 2,439,999,847 Hz. The physical frequency follows the actual
@@ -176,7 +182,8 @@ The analog registers are accessed through the ROM's `regi2c` helpers, using
 RFPLL block `0x62` and sigma-delta block `0x63`. In the notation below,
 `0x62:11[6]` means bit 6 of register 11 in analog block `0x62`.
 
-The current `tune_pll()` sequence is:
+The current `tune_pll()` sequence first clears CKGEN `0x65:0[4]` to calibrate
+in normal conversion, and calculates `W` for the requested effective LO:
 
 1. Set `0x6000e0c4[25]` to take software control of RFPLL tuning and clear
    manual capacitor mode at `0x62:11[6]`.
@@ -191,6 +198,9 @@ The current `tune_pll()` sequence is:
    firmware's acceptance criterion. Find the longest consecutive run of
    accepted codes and select `first + (length - 1) / 2`.
 6. Hold that capacitor code in manual mode for reception.
+7. After configuring the receive path, set CKGEN `0x65:0[4]` for 5/6 or clear
+   it for normal conversion, preserving the other bits. Wait 3 ms and verify
+   the bit readback. This step also follows changes to gain and filters.
 
 Choosing the middle gives room on either side of the selected code. A full
 scan also handles the shape of the capacitor map without relying on a
@@ -202,15 +212,19 @@ repeated the final 32-code section.
 `pll=224[220+10]` would mean code 224 was selected from codes 220 through 229.
 Those numbers describe the capacitor scan's status window.
 
-The current LO control accepts **2210–2790 MHz**. Earlier capacitor-status
-sweeps found an interval around 2207–2795 MHz on the development board. In
-the later screenshot session, the highest accepted LO was 2781 MHz, with
-2782–2790 MHz returning an error. These are the observations behind the
-roughly 2.2–2.8 GHz tuning range described in the README.
+The LO control accepts **1841.666667–2790 MHz**, choosing 5/6 below 2210 MHz
+and normal conversion above it. The ordinary PLL coordinate still uses the
+2210–2790 MHz request limits. Earlier capacitor-status sweeps found an interval
+around 2207–2795 MHz on the development board; in the screenshot session the
+highest accepted LO was 2781 MHz, with 2782–2790 MHz returning an error.
+The approximate 1.84–2.79 GHz combined envelope is derived from these PLL
+limits and the measured conversion ratio. Actual endpoints remain
+board-dependent. [The extension guide](LO-EXTENSION.md#quick-validity-check)
+summarizes the externally verified sparse points separately.
 
 If calibration times out or the scan finds no accepted code, the setting
 change fails. The firmware restores the previous requested settings and
-retunes the receiver to them; receiver status records whether restoration
+retunes the receiver to them, including its CKGEN conversion mode; receiver status records whether restoration
 succeeded.
 
 ## Sample rate, width and filter

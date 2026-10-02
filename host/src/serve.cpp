@@ -832,7 +832,10 @@ private:
         // A section that is not known goes as null, so the page drops what it had.
         if (p.receiver_valid) {
             const ReceiverState &r = p.receiver;
-            s += "{\"lo\":" + std::to_string(r.lo_hz) + ",\"rate\":" + (r.rate == ESP_RATE_16M ? "16" : "80") +
+            s += "{\"lo\":" + std::to_string(r.lo_hz) + ",\"lo_mode\":" + std::to_string(r.lo_mode) +
+                 ",\"pll_hz\":" + std::to_string(r.pll_hz) + ",\"sdm\":" + std::to_string(r.sdm_word) +
+                 ",\"lo_min\":" + std::to_string(ESP_LO_MIN_HZ) + ",\"lo_max\":" + std::to_string(ESP_LO_MAX_HZ) +
+                 ",\"rate\":" + (r.rate == ESP_RATE_16M ? "16" : "80") +
                  ",\"width\":" + std::to_string(r.width) + ",\"filter\":[" + std::to_string(r.filter_first()) + "," +
                  std::to_string(r.filter_second()) + "],\"gain\":" + std::to_string(r.gain) +
                  ",\"rf\":" + std::to_string(r.rf_gain) + ",\"bb\":" + std::to_string(r.bb_gain) + ",\"dc\":[" +

@@ -7,11 +7,12 @@
 
 #include "serial.h"
 
-// The settings in effect, as the ESP reports them (ESP_STAT_LO_HZ..PLL).
+// The settings in effect, as the ESP reports them (ESP_STAT_LO_HZ..SDM_WORD).
 struct ReceiverState {
     uint32_t radio = 0;  // ESP_RADIO_*: not OK after a failed setting could not be undone
     uint32_t lo_hz = 0, rate = 0, width = 0, filter = 0, gain = 0, rf_gain = 0, bb_gain = 0;
     uint32_t dc[4] = {0, 0, 0, 0}, iq = 0, automatic = 0, pll = 0;
+    uint32_t lo_mode = 0, pll_hz = 0, sdm_word = 0;
 
     double sample_rate() const;  // pairs per second
     unsigned filter_first() const { return filter & 63; }

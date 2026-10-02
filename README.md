@@ -144,10 +144,17 @@ setting so the PLL can lock. The firmware sets the frequency word, scans all
 lock. The capacitor bank tunes the VCO's operating range, and the PLL's
 frequency-divider feedback sets the frequency.
 
-Bench work found a lock range of roughly 2.2–2.8 GHz in the tested
-configuration. The current UI accepts 2210–2790 MHz; a failed lock restores
-the previous LO. The receiver settings and screenshots below include the
-upper-limit capture from this board.
+The receiver now selects a second, RF-tone-verified **5/6 conversion mode**
+below 2210 MHz. Combining it with normal conversion gives roughly
+**1.84–2.79 GHz tuning reach**. The UI accepts 1841.666667–2790 MHz; actual
+endpoint lock depends on the board, and a failed tune restores the previous
+LO and mode. The retained RF measurements are sparse points, not a sweep of
+the complete envelope.
+
+The [5/6 LO extension guide](docs/LO-EXTENSION.md) includes the register
+sequence, a standalone 0BSD C helper and the method for investigating
+conversion modes on other ESP variants. It also maps the newly reachable
+DECT, PCS and 2.1 GHz cellular bands.
 
 ## Hardware
 
@@ -296,7 +303,7 @@ is made between captures.
 
 | Setting | Values | Notes |
 |---|---|---|
-| `lo=` | 2210–2790 MHz (`2402M`, `2.44G`, Hz) | Steps of 457.76 Hz; the exact LO is reported. A failed PLL lock keeps the previous LO |
+| `lo=` | 1841.666667–2790 MHz (`1900M`, `2.44G`, Hz) | Automatic 5/6 below 2210 MHz; nominal steps 381.47/457.76 Hz. Status reports effective LO and mode; failed PLL lock restores both |
 | `rate=` | `80`, `16` | Msps; the spectrum spans the sample rate |
 | `width=` | `40`, `20` | Analog channel width, MHz |
 | `filter=` | `N` or `N,M`, 0–63 | Baseband RC filter codes of the width's register pair; higher is narrower, 0 widest |

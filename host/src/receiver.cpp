@@ -55,6 +55,9 @@ ReceiverState read_receiver(ControlPort &esp)
     s.iq = esp.command(CTL_STATUS, ESP_STAT_IQ);
     s.automatic = esp.command(CTL_STATUS, ESP_STAT_AUTOMATIC);
     s.pll = esp.command(CTL_STATUS, ESP_STAT_PLL);
+    s.lo_mode = esp.command(CTL_STATUS, ESP_STAT_LO_MODE);
+    s.pll_hz = esp.command(CTL_STATUS, ESP_STAT_PLL_HZ);
+    s.sdm_word = esp.command(CTL_STATUS, ESP_STAT_SDM_WORD);
     return s;
 }
 
@@ -77,7 +80,7 @@ ReceiverChange parse_receiver_setting(const std::string &text)
         else if (suffix == "G") hz *= 1e9;
         else if (!suffix.empty() || value.empty()) bad(text, "needs a frequency such as 2402M");
         if (!(hz >= ESP_LO_MIN_HZ && hz <= ESP_LO_MAX_HZ))
-            bad(text, "the LO must be from 2210 to 2790 MHz");
+            bad(text, "the LO must be from 1841.666667 to 2790 MHz");
         change = {ESP_SET_LO, uint32_t(std::llround(hz))};
     } else if (name == "rate") {
         if (value == "80") change = {ESP_SET_RATE, ESP_RATE_80M};
@@ -140,6 +143,8 @@ std::string describe_receiver(const ReceiverState &s)
             (s.automatic & 64 ? "(auto)" : "");
     text += " pll=" + std::to_string(s.pll_cap()) + "[" + std::to_string(s.pll_first()) + "+" +
             std::to_string(s.pll_length()) + "]";
+    text += std::string(" lo_mode=") + (s.lo_mode == 2 ? "5/6" : "normal") +
+            " pll_hz=" + std::to_string(s.pll_hz) + " sdm=" + std::to_string(s.sdm_word);
     if (s.radio != ESP_RADIO_OK) text += " radio=FAILED(" + std::to_string(s.radio) + ")";
     return text;
 }
